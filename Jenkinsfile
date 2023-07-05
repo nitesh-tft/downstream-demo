@@ -1,3 +1,9 @@
+def branchName = 'dev' // Default branch name if not provided
+
+parameters {
+    string(name: 'BRANCH_NAME', defaultValue: branchName, description: 'Branch name for downstream pipeline')
+}
+
 pipeline {
     agent any
     stages {
@@ -6,9 +12,16 @@ pipeline {
                 echo 'Hello World'
             }
         }
-    }
-    environment {
-        // Retrieve the BRANCH_NAME parameter from upstream
-        def branchName = params.BRANCH_NAME ?: 'main'
+        stage('Trigger Downstream Pipeline') {
+            steps {
+                script {
+                    def downstreamParams = [
+                        string(name: 'BRANCH_NAME', value: env.BRANCH_NAME)
+                    ]
+                    def downstreamJobFullName = "demo-pipe"
+                    build job: downstreamJobFullName, parameters: downstreamParams
+                }
+            }
+        }
     }
 }
